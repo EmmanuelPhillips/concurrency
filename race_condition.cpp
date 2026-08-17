@@ -1,11 +1,11 @@
+#include <atomic>
 #include <iostream>
-#include <mutex>
 #include <thread>
 
-std::mutex mtx;
+std::atomic<int> c{0}; // now using std::atomic instead of std::mutex. this is
+                       // lighter weight and doesnt require mutex
 
 void increment(int &c) {
-  std::lock_guard<std::mutex> lock(mtx); // lock scope (no race condition now)
   for (int i{0}; i < 100000; ++i) {
     ++c;
   }
