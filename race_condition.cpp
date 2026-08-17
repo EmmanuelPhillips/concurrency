@@ -2,7 +2,7 @@
 #include <iostream>
 #include <thread>
 
-void increment(int &c) {
+void increment(std::atomic<int> &c) {
   for (int i{0}; i < 100000; ++i) {
     ++c;
   }
