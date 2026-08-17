@@ -2,9 +2,6 @@
 #include <iostream>
 #include <thread>
 
-std::atomic<int> c{0}; // now using std::atomic instead of std::mutex. this is
-                       // lighter weight and doesnt require mutex
-
 void increment(int &c) {
   for (int i{0}; i < 100000; ++i) {
     ++c;
@@ -12,7 +9,8 @@ void increment(int &c) {
 }
 
 int main() {
-  int c{0};
+  std::atomic<int> c{0}; // now using std::atomic instead of std::mutex. this is
+                         // lighter weight and doesnt require mutex
 
   std::thread t1(increment, std::ref(c));
   std::thread t2(increment, std::ref(c));
