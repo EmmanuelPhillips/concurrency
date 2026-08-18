@@ -23,20 +23,31 @@
 
 class ThreadSafeQueue {
 private:
-  std::queue<int> m_queue{};
+  std::queue<int> queue_{};
   std::mutex mtx;
   std::condition_variable cv;
 
 public:
-  void push(int n) {}
-  void pop() {}
+  void push(int n) {
+    std::unique_lock<std::mutex> lock(mtx);
+    std::cout << "pushing: " << n;
+    queue_.push(n);
+    cv.notify_one();
+  }
+
+  void pop() {
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait(lock, [this]() { return !queue_.empty(); });
+    std::cout << "popping: " << queue_.front();
+    queue_.pop();
+  }
 };
 
 int main() {
   ThreadSafeQueue my_queue{};
 
-  std::thread t1(push, 1);
-  std::thread t2(pop);
+  std::thread t1(&ThreadSafeQueue::push, &my_queue, 1);
+  std::thread t2(&ThreadSafeQueue::pop, &my_queue);
 
   t1.join();
   t2.join();
