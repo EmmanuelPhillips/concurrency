@@ -31,12 +31,18 @@ private:
 
 public:
   void produce(int n) {
-    std::unique_lock<std::mutex> lock(mtx);
     for (int i{0}; i <= n; ++i) {
-      std::cout << "pushing: " << i;
-      queue_.push(i);
+      {
+        std::unique_lock<std::mutex> lock(mtx);
+        std::cout << "pushing: " << i << '\n';
+        queue_.push(i);
+      }
+      cv.notify_one();
     }
-    done = true;
+    {
+      std::unique_lock<std::mutex> lock(mtx);
+      done = true;
+    }
     cv.notify_one();
   }
 
@@ -45,7 +51,7 @@ public:
       std::unique_lock<std::mutex> lock(mtx);
       cv.wait(lock, [this]() { return !queue_.empty() || done; });
       while (!queue_.empty()) {
-        std::cout << "popping: " << queue_.front();
+        std::cout << "popping: " << queue_.front() << '\n';
         queue_.pop();
       }
       if (done && queue_.empty()) {
