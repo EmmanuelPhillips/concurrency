@@ -27,27 +27,39 @@ private:
   std::mutex mtx;
   std::condition_variable cv;
 
+  bool done{false};
+
 public:
-  void push(int n) {
+  void produce(int n) {
     std::unique_lock<std::mutex> lock(mtx);
-    std::cout << "pushing: " << n;
-    queue_.push(n);
+    for (int i{0}; i <= n; ++i) {
+      std::cout << "pushing: " << i;
+      queue_.push(i);
+    }
+    done = true;
     cv.notify_one();
   }
 
-  void pop() {
-    std::unique_lock<std::mutex> lock(mtx);
-    cv.wait(lock, [this]() { return !queue_.empty(); });
-    std::cout << "popping: " << queue_.front();
-    queue_.pop();
+  void consume() {
+    while (true) {
+      std::unique_lock<std::mutex> lock(mtx);
+      cv.wait(lock, [this]() { return !queue_.empty() || done; });
+      while (!queue_.empty()) {
+        std::cout << "popping: " << queue_.front();
+        queue_.pop();
+      }
+      if (done && queue_.empty()) {
+        break;
+      }
+    }
   }
 };
 
 int main() {
   ThreadSafeQueue my_queue{};
 
-  std::thread t1(&ThreadSafeQueue::push, &my_queue, 1);
-  std::thread t2(&ThreadSafeQueue::pop, &my_queue);
+  std::thread t1(&ThreadSafeQueue::produce, &my_queue, 5);
+  std::thread t2(&ThreadSafeQueue::consume, &my_queue);
 
   t1.join();
   t2.join();
