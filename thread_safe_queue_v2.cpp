@@ -64,12 +64,14 @@ public:
 int main() {
   ThreadSafeQueue tsq{};
 
+  tsq.print_queue();
+
   std::thread t1(&ThreadSafeQueue::produce, &tsq, 5);
-  std::thread t2(&ThreadSafeQueue::consume, &tsq);
+  t1.join();
 
   tsq.print_queue();
-  t1.join();
-  tsq.print_queue();
+
+  std::thread t2(&ThreadSafeQueue::consume, &tsq);
   t2.join();
   tsq.print_queue();
 
