@@ -14,15 +14,20 @@ private:
 
 public:
   void produce(int n) {
-    std::unique_lock<std::mutex> lock(
-        mtx); // Lock so other threads can't work for now
     for (int i{1}; i <= n; ++i) {
-      data_queue.push(i); // Produce integers to queue
-      std::cout << "produced: " << i << '\n';
+      {
+        std::unique_lock<std::mutex> lock(mtx);
+        data_queue.push(i); // Produce integers to queue
+        std::cout << "produced: " << i << '\n';
+      }
+      cv.notify_one();
+    } // Scope locks and unlocks between each integer produced
+    {
+      std::unique_lock<std::mutex> lock(mtx);
+      done =
+          true; // Set done to true so consume knows how many integers there are
     }
-    done =
-        true; // Set done to true so consume knows how many integers there are
-    cv.notify_one(); // Notify other thread that it's being unlocked
+    cv.notify_one(); // Wake the other thread
   }
 
   void consume() {
@@ -35,7 +40,22 @@ public:
       data_queue.pop(); // Pop values till the queue is empty
       std::cout << "popped: " << p << '\n';
     }
-  };
+  }
+
+  void print_queue() {
+    std::unique_lock<std::mutex> lock(mtx);
+    if (data_queue.empty()) {
+      std::cout << "queue is empty.\n";
+      return;
+    }
+    std::cout << "current queue: ";
+    auto copy{data_queue}; // Create copy to iterate over
+    while (!copy.empty()) {
+      std::cout << copy.front() << ", ";
+      copy.pop();
+    }
+    std::cout << '\n';
+  }
 };
 
 int main() {
@@ -44,8 +64,11 @@ int main() {
   std::thread t1(&ThreadSafeQueue::produce, &tsq, 5);
   std::thread t2(&ThreadSafeQueue::consume, &tsq);
 
+  tsq.print_queue();
   t1.join();
+  tsq.print_queue();
   t2.join();
+  tsq.print_queue();
 
   return 0;
 }
