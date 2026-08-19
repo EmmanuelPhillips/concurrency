@@ -26,12 +26,13 @@ public:
   }
 
   void consume() {
-    std::unique_lock<std::mutex> lock(mtx);
-    cv.wait(lock, [this] { return; });
+    std::unique_lock<std::mutex> lock(
+        mtx); // Lock so other threads can't work for now
+    cv.wait(lock, [this] { return done; }); // Wait till notify_one() triggers
 
-    while (!data_queue.empty() && done) {
+    while (!data_queue.empty()) { // Check to see if the queue has data
       int p{data_queue.front()};
-      data_queue.pop();
+      data_queue.pop(); // Pop values till the queue is empty
       std::cout << "popped: " << p << '\n';
     }
   };
@@ -40,8 +41,8 @@ public:
 int main() {
   ThreadSafeQueue tsq{};
 
-  std::thread t1(&ThreadSafeQueue::produce, 5);
-  std::thread t2(&ThreadSafeQueue::consume);
+  std::thread t1(&ThreadSafeQueue::produce, &tsq, 5);
+  std::thread t2(&ThreadSafeQueue::consume, &tsq);
 
   t1.join();
   t2.join();
