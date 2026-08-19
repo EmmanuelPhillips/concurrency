@@ -39,7 +39,7 @@ public:
         data_queue.pop(); // Pop values till the queue is empty
         std::cout << "popped: " << p << '\n';
       }
-      if (!data_queue.empty() && done) {
+      if (data_queue.empty() && done) {
         break;
       }
     }
