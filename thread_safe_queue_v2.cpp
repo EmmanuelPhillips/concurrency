@@ -1,3 +1,4 @@
+#include <chrono>
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
@@ -21,6 +22,7 @@ public:
         std::cout << "produced: " << i << '\n';
       }
       cv.notify_one();
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     } // Scope locks and unlocks between each integer produced
     {
       std::unique_lock<std::mutex> lock(mtx);
