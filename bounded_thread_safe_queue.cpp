@@ -4,23 +4,35 @@
 
 class BTSQ {
 private:
-  std::queue<int> queue_;
+  std::queue<int> data_queue;
   int max_size;
 
-public:
-};
-
-int main() {
   std::mutex mtx;
   std::condition_variable cv;
 
-  std::thread t1;
+  bool done{false};
+
+public:
+  void produce(int n) {
+    std::unique_lock<std::mutex> lock(mtx);
+    if (data_queue.size() >= max_size) {
+      return;
+    } else {
+      data_queue.push(n);
+      return;
+    }
+    cv.notify_one();
+  }
+};
+
+int main() {
+  BTSQ btsq{};
+
+  std::thread t1(&BTSQ::produce, &btsq, 5);
   std::thread t2;
 
   t1.join();
   t2.join();
-
-  BTSQ btsq{};
 
   std::cout << '\n';
   return 0;
