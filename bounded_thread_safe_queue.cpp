@@ -13,20 +13,22 @@ private:
   bool done{false};
 
 public:
+  BTSQ(int size) : max_size{size} {}
   void produce(int n) {
     std::unique_lock<std::mutex> lock(mtx);
     if (data_queue.size() >= max_size) {
+      cv.notify_one();
       return;
     } else {
       data_queue.push(n);
-      return;
     }
     cv.notify_one();
+    return;
   }
 };
 
 int main() {
-  BTSQ btsq{};
+  BTSQ btsq{5};
 
   std::thread t1(&BTSQ::produce, &btsq, 5);
   std::thread t2;
