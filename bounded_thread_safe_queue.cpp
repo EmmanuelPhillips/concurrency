@@ -16,7 +16,16 @@ private:
 public:
   BTSQ(int size) : m_size{size} {}
 
-  void produce(int n) {}
+  void produce(int n) {
+    std::unique_lock<std::mutex> lock(mtx);
+
+    not_full.wait(lock, [this] { return m_data_queue.size() < m_size; });
+    m_data_queue.push(n);
+    std::cout << "produced: " << n << " | queue size: " << m_data_queue.size()
+              << '\n';
+    not_empty.notify_one();
+  }
+
   void consume() {}
 };
 
