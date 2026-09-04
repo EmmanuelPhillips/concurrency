@@ -144,3 +144,33 @@ rather than just following the code, but still needed help with the lambda and
 - Rewrite the same queue from a blank file without referring to this version.
 - Move onto the bounded buffer version, where both the producer and consumer can
   block.
+
+--------------------------------------------------------------------------------
+
+## Bounded Thread Safe Queue
+
+### Goal
+
+Extend the thread-safe queue into a bounded buffer where the producer blocks
+when the queue is full, requiring a second condition_variable.
+
+### What I Learnt
+
+The queue now has two conditions: not_empty lets the consumer wait for data,
+while not_full lets the producer wait for available space. I learnt that
+notify_one() wakes a waiting thread so it can recheck its predicate, rather than
+guaranteeing that the thread can immediately continue. I also understood why a
+done flag isn't needed here, since both threads know exactly how many items they
+need to produce or consume.
+
+### Challenges
+
+The main challenge was understanding how the two condition variables work
+together, as having separate wait conditions initially felt more complicated.
+Thinking of them as two separate questions --- "can I consume?" and "can I
+produce?" --- made the mechanism much clearer.
+
+### Changes for Next Time
+
+Rewrite the bounded queue from a blank file, then move onto multiple producers
+and consumers.
