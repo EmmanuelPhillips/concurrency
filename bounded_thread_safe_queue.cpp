@@ -8,7 +8,7 @@
 class BTSQ {
 private:
   std::queue<int> m_data_queue;
-  int m_max_size;
+  const int m_max_size;
 
   std::mutex mtx;
   std::condition_variable not_empty;
